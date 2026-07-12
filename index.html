@@ -3,379 +3,648 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dukaan Card — Digital Shop Signboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Shop Signage</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
   :root{
-    --bg:#0B1120;
-    --bg-2:#0E1526;
-    --surface:#141B2E;
-    --surface-2:#1C2540;
-    --gold:#E8B84B;
-    --gold-dim:#B8903A;
-    --vermilion:#D14D3D;
-    --cream:#F5EFE0;
-    --muted:#8892B0;
-    --line:rgba(232,184,75,0.22);
+    --bg:#0B1220;
+    --panel:#121A2B;
+    --panel-2:#182238;
+    --gold:#F2B705;
+    --teal:#2DD4BF;
+    --text:#EDEFF5;
+    --muted:#8892A6;
+    --danger:#EF6461;
+    --line: rgba(237,239,245,0.08);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;height:100%;}
   body{
-    min-height:100vh;
     background:
-      radial-gradient(1200px 600px at 20% -10%, rgba(232,184,75,0.10), transparent 60%),
-      radial-gradient(900px 500px at 100% 10%, rgba(209,77,61,0.10), transparent 55%),
+      radial-gradient(ellipse at 20% -10%, rgba(45,212,191,0.10), transparent 55%),
+      radial-gradient(ellipse at 100% 0%, rgba(242,183,5,0.08), transparent 45%),
       var(--bg);
-    color:var(--cream);
+    color:var(--text);
     font-family:'Inter',sans-serif;
-    display:flex;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--teal);
+  }
+  h1,h2,h3{
+    font-family:'Bebas Neue',sans-serif;
+    letter-spacing:.03em;
+    margin:0;
+    font-weight:400;
+  }
+  .screen{
+    display:none;
+    min-height:100vh;
+    width:100%;
     align-items:center;
     justify-content:center;
     padding:24px;
   }
-  #app{width:100%;max-width:1100px;}
-  h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
-  a{color:var(--gold);}
-  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
-  ::selection{background:var(--gold);color:#0B1120;}
-  input, textarea{
-    font-family:'Inter',sans-serif;
-    background:var(--surface-2);
-    border:1px solid var(--line);
-    color:var(--cream);
-    border-radius:10px;
-    padding:12px 14px;
-    font-size:14px;
-    width:100%;
-    outline:none;
-    transition:border-color .15s ease, box-shadow .15s ease;
-  }
-  input:focus, textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,184,75,0.15);}
-  textarea{resize:vertical;min-height:70px;}
-  label{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600;}
-  .field{margin-bottom:16px;}
+  .screen.active{display:flex;}
  
-  /* ---------- shared card chrome (hand-painted signboard look) ---------- */
-  .board{
+  /* ---------- Bulb border (signature element) ---------- */
+  .bulb-frame{
     position:relative;
-    background:linear-gradient(180deg, var(--surface), var(--surface-2));
-    border:1px solid var(--line);
-    border-radius:20px;
-    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
+    padding:3px;
+    border-radius:22px;
+    background: linear-gradient(135deg, rgba(242,183,5,0.18), rgba(45,212,191,0.12));
   }
-  .board::before{
+  .bulb-frame::before{
     content:'';
-    position:absolute;inset:8px;
-    border:1.5px dashed rgba(232,184,75,0.35);
-    border-radius:14px;
+    position:absolute; inset:0;
+    border-radius:22px;
+    padding:1px;
+    background: repeating-linear-gradient(90deg, var(--gold) 0 2px, transparent 2px 14px);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
     pointer-events:none;
   }
-  .hooks{position:absolute;top:-14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 40px;pointer-events:none;}
-  .hooks span{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #f0d68a, var(--gold-dim));box-shadow:0 4px 8px rgba(0,0,0,0.4);}
+  .bulbs{
+    position:absolute;
+    inset:0;
+    border-radius:22px;
+    pointer-events:none;
+  }
+  .bulb{
+    position:absolute;
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 6px 2px rgba(242,183,5,0.7);
+    opacity:.25;
+  }
  
-  /* ---------- LOGIN ---------- */
-  .login-wrap{display:flex;justify-content:center;padding:40px 16px;}
-  .login-card{width:100%;max-width:400px;padding:44px 36px 36px;text-align:center;}
-  .eyebrow{color:var(--gold);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin-bottom:10px;}
-  .login-card h1{font-size:30px;margin:0 0 6px;color:var(--cream);}
-  .login-card p.sub{color:var(--muted);font-size:14px;margin:0 0 28px;}
+  /* ---------- Card shell ---------- */
+  .card{
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--line);
+    border-radius:19px;
+    padding:34px 28px;
+    width:100%;
+    max-width:400px;
+  }
+  .brand-mark{
+    display:flex; align-items:center; gap:10px; margin-bottom:22px;
+  }
+  .brand-mark .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px 2px rgba(242,183,5,.6);}
+  .field{margin-bottom:16px;}
+  label{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:.03em;
+  }
+  input[type=text], input[type=password], input[type=tel], textarea{
+    width:100%;
+    background: rgba(255,255,255,0.03);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:12px 13px;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    outline:none;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  input:focus, textarea:focus{
+    border-color:var(--teal);
+    background:rgba(45,212,191,0.05);
+  }
+  textarea{resize:vertical; min-height:70px;}
   .btn{
-    display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    background:var(--gold);color:#1a1204;font-weight:700;
-    padding:13px 22px;border-radius:10px;font-size:14px;width:100%;
-    transition:transform .15s ease, background .15s ease;
+    width:100%;
+    padding:13px 16px;
+    border-radius:10px;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:transform .1s ease, filter .15s ease;
   }
-  .btn:hover{background:#f0c563;transform:translateY(-1px);}
-  .btn:active{transform:translateY(0);}
-  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--cream);}
-  .btn-ghost:hover{background:var(--surface-2);}
-  .btn-vermilion{background:var(--vermilion);color:var(--cream);}
-  .btn-vermilion:hover{background:#e05a48;}
-  .error-msg{color:var(--vermilion);font-size:13px;margin-top:14px;min-height:18px;font-weight:600;}
- 
-  /* ---------- DASHBOARD ---------- */
-  .dash{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;}
-  @media(max-width:820px){.dash{grid-template-columns:1fr;}}
-  .panel{padding:28px;}
-  .panel h2{font-size:20px;margin:0 0 4px;}
-  .panel p.hint{color:var(--muted);font-size:13px;margin:0 0 22px;}
-  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-  .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
-  .top-bar .brand{display:flex;align-items:center;gap:10px;font-family:'Baloo 2';font-weight:700;font-size:18px;}
-  .top-bar .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);}
-  .link-out{background:transparent;color:var(--muted);font-size:13px;border:1px solid var(--line);padding:8px 14px;border-radius:8px;}
-  .link-out:hover{color:var(--cream);border-color:var(--gold);}
- 
-  /* preview card */
-  .preview-stage{position:sticky;top:24px;padding:36px 28px;display:flex;flex-direction:column;align-items:center;}
-  .logo-circle{
-    width:84px;height:84px;border-radius:50%;
-    background:var(--surface-2);border:2px solid var(--gold);
-    display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:16px;
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--gold), #d99e04);
+    color:#1a1204;
   }
-  .logo-circle img{width:100%;height:100%;object-fit:cover;}
-  .preview-name{font-size:24px;text-align:center;margin:0 0 4px;color:var(--gold);}
-  .preview-line{color:var(--cream);font-size:13.5px;text-align:center;margin:2px 0;opacity:.9;}
-  .preview-comment{margin-top:14px;font-size:13px;color:var(--muted);font-style:italic;text-align:center;border-top:1px dashed var(--line);padding-top:14px;width:100%;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text);
+    margin-top:10px;
+  }
+  .btn-ghost:hover{border-color:var(--teal); color:var(--teal);}
+  .error-msg{
+    color:var(--danger);
+    font-size:13px;
+    margin-top:10px;
+    font-family:'JetBrains Mono',monospace;
+    display:none;
+  }
+  .helper{
+    color:var(--muted);
+    font-size:12.5px;
+    margin-top:14px;
+    line-height:1.5;
+  }
+  .helper b{color:var(--text);}
  
-  .modal-backdrop{position:fixed;inset:0;background:rgba(4,6,14,0.72);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;}
-  .modal{width:100%;max-width:440px;padding:30px;}
-  .modal h3{margin:0 0 6px;font-size:19px;}
-  .modal p{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 18px;}
-  .modal .actions{display:flex;gap:10px;margin-top:18px;}
-  .close-x{position:absolute;top:14px;right:16px;background:none;color:var(--muted);font-size:20px;line-height:1;}
-  .close-x:hover{color:var(--cream);}
- 
-  .link-result{margin-top:16px;padding:14px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);display:flex;gap:8px;align-items:center;}
-  .link-result input{background:transparent;border:none;color:var(--gold);font-size:12.5px;padding:4px;}
-  .copy-btn{background:var(--gold);color:#1a1204;font-weight:700;font-size:12px;padding:9px 14px;border-radius:7px;white-space:nowrap;}
- 
-  .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(26,18,4,0.3);border-top-color:#1a1204;animation:spin .7s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .status-msg{font-size:12.5px;margin-top:10px;min-height:16px;}
-  .status-msg.err{color:var(--vermilion);}
-  .status-msg.ok{color:#7fd99a;}
- 
-  /* ---------- AD VIEW ---------- */
-  .ad-stage{
-    min-height:100vh;width:100%;
+  /* ---------- Dashboard ---------- */
+  #screen-dashboard{align-items:flex-start; padding-top:48px; padding-bottom:60px;}
+  .dash-wrap{width:100%; max-width:460px; margin:0 auto;}
+  .top-row{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:22px;}
+  .logout{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+    padding:0;
+  }
+  .logo-upload{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .logo-preview{
+    width:64px;height:64px;
+    border-radius:14px;
+    background:rgba(255,255,255,0.04);
+    border:1px dashed var(--line);
     display:flex;align-items:center;justify-content:center;
-    perspective:1400px;
-    position:fixed;inset:0;
-    background:
-      radial-gradient(1000px 600px at 50% 0%, rgba(232,184,75,0.12), transparent 60%),
-      var(--bg);
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .logo-preview img{width:100%;height:100%;object-fit:cover;}
+  .logo-preview svg{opacity:.35;}
+  .upload-btn-label{
+    font-size:13px;
+    color:var(--teal);
+    cursor:pointer;
+    font-weight:600;
+  }
+  input[type=file]{display:none;}
+ 
+  .divider{
+    height:1px;
+    background:var(--line);
+    margin:22px 0;
+  }
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:11px;
+    font-family:'JetBrains Mono',monospace;
+    color:var(--teal);
+    opacity:0;
+    transition:opacity .3s ease;
+    margin-top:8px;
+  }
+  .status-pill.show{opacity:1;}
+  .status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+ 
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(3,6,14,0.72);
+    backdrop-filter:blur(3px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .overlay.active{display:flex;}
+  .modal{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:26px;
+    width:100%;
+    max-width:400px;
+  }
+  .modal h3{font-size:22px; margin-bottom:6px;}
+  .modal p.sub{color:var(--muted); font-size:12.5px; margin:0 0 18px 0; line-height:1.5;}
+  .link-box{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+  }
+  .link-box input{flex:1; font-size:12px; font-family:'JetBrains Mono',monospace;}
+  .copy-btn{
+    background:var(--teal);
+    color:#04211d;
+    border:none;
+    border-radius:10px;
+    padding:0 14px;
+    font-weight:700;
+    font-size:12px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .spinner{
+    width:16px;height:16px;
+    border:2px solid rgba(255,255,255,0.2);
+    border-top-color:var(--gold);
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    display:inline-block;
+    vertical-align:middle;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .close-x{
+    position:absolute; top:16px; right:18px;
+    background:none;border:none;color:var(--muted);
+    font-size:18px; cursor:pointer;
+  }
+  .modal{position:relative;}
+ 
+  /* ---------- Viewer ---------- */
+  #screen-viewer{flex-direction:column; text-align:center;}
+  .viewer-loading{display:flex; flex-direction:column; align-items:center; gap:14px;}
+  .viewer-loading .spinner{width:28px;height:28px;border-width:3px;}
+  .shop-card{
+    width:100%;
+    max-width:380px;
+    padding:40px 26px 34px;
+    text-align:center;
+    position:relative;
+    cursor:pointer;
+    transform-origin:center;
+  }
+  .shop-card .logo-wrap{
+    width:88px;height:88px;
+    margin:0 auto 18px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
     overflow:hidden;
   }
-  .ad-glow{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(120px);opacity:.25;background:var(--gold);top:-200px;left:-150px;}
-  .ad-glow.b{background:var(--vermilion);top:auto;bottom:-220px;right:-180px;left:auto;}
-  .ad-card{
-    position:relative;
-    width:min(420px, 88vw);
-    padding:48px 34px 38px;
-    transform-style:preserve-3d;
-    text-align:center;
-    opacity:0;
+  .shop-card .logo-wrap img{width:100%;height:100%;object-fit:cover;}
+  .shop-name{font-size:38px; margin-bottom:4px;}
+  .shop-line{
+    color:var(--muted);
+    font-size:13.5px;
+    margin-top:8px;
+    line-height:1.5;
   }
-  .ad-card .logo-circle{width:104px;height:104px;margin:0 auto 20px;}
-  .ad-card h1{font-size:30px;color:var(--gold);margin:0 0 10px;line-height:1.15;}
-  .ad-line{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14.5px;margin:8px 0;color:var(--cream);opacity:.92;}
-  .ad-line svg{flex:none;width:16px;height:16px;stroke:var(--gold);}
-  .ad-comment{margin-top:20px;padding-top:18px;border-top:1px dashed var(--line);font-style:italic;color:var(--muted);font-size:13.5px;line-height:1.5;}
-  .ad-footer{margin-top:26px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
-  .ad-loading, .ad-error{color:var(--muted);font-size:14px;text-align:center;}
-  .ad-error{color:var(--vermilion);}
+  .shop-line .lbl{color:var(--teal); font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.08em; display:block; margin-bottom:2px;}
+  .shop-comment{
+    margin-top:18px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    font-style:italic;
+    color:var(--text);
+    font-size:14px;
+    line-height:1.5;
+  }
+  .zoom-hint{
+    margin-top:22px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.06em;
+    color:var(--gold);
+    opacity:.8;
+  }
  
-  .storefront-icon{width:36px;height:36px;stroke:var(--gold-dim);}
+  /* ---------- 3D Ad Stage ---------- */
+  #ad-stage{
+    display:none;
+    position:fixed; inset:0;
+    background:var(--bg);
+    z-index:40;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    perspective:1200px;
+    overflow:hidden;
+  }
+  #ad-stage.active{display:flex;}
+  .ad-carousel{
+    position:relative;
+    width:220px; height:300px;
+    transform-style:preserve-3d;
+  }
+  .ad-card{
+    position:absolute;
+    inset:0;
+    border-radius:16px;
+    background:linear-gradient(160deg, var(--panel-2), var(--panel));
+    border:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    text-align:center;
+    backface-visibility:hidden;
+  }
+  .ad-card .eyebrow{margin-bottom:10px;}
+  .ad-card h3{font-size:26px; margin-bottom:8px;}
+  .ad-card p{font-size:12.5px; color:var(--muted); line-height:1.5; margin:0;}
+  .ad-close{
+    margin-top:38px;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:10px 22px;
+    border-radius:30px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.06em;
+    cursor:pointer;
+  }
+  .ad-close:hover{border-color:var(--teal); color:var(--teal);}
+  .ad-title{
+    position:absolute; top:44px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; letter-spacing:.14em;
+    color:var(--gold); text-transform:uppercase;
+  }
+ 
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
 </style>
 </head>
 <body>
-<div id="app"></div>
+ 
+<!-- ============ LOGIN ============ -->
+<div class="screen active" id="screen-login">
+  <div class="bulb-frame">
+    <div class="bulbs" id="login-bulbs"></div>
+    <div class="card">
+      <div class="brand-mark"><span class="dot"></span><span class="eyebrow">Shop Signage — Owner Access</span></div>
+      <h1 style="font-size:30px; margin-bottom:22px;">Sign in</h1>
+      <div class="field">
+        <label for="login-user">Username</label>
+        <input type="text" id="login-user" autocomplete="username" placeholder="code-x">
+      </div>
+      <div class="field">
+        <label for="login-pass">Password</label>
+        <input type="password" id="login-pass" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" id="login-btn">Enter shop panel</button>
+      <div class="error-msg" id="login-error">Incorrect username or password.</div>
+    </div>
+  </div>
+</div>
+ 
+<!-- ============ DASHBOARD ============ -->
+<div class="screen" id="screen-dashboard">
+  <div class="dash-wrap">
+    <div class="top-row">
+      <div>
+        <div class="eyebrow" style="margin-bottom:4px;">Owner panel</div>
+        <h2 style="font-size:26px;">Your shop details</h2>
+      </div>
+      <button class="logout" id="logout-btn">Log out</button>
+    </div>
+ 
+    <div class="bulb-frame">
+      <div class="bulbs" id="dash-bulbs"></div>
+      <div class="card">
+        <div class="logo-upload">
+          <div class="logo-preview" id="logo-preview">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8892A6" stroke-width="1.5"><path d="M3 9l1-5h16l1 5M3 9v10a1 1 0 001 1h16a1 1 0 001-1V9M3 9h18M8 13a2 2 0 104 0 2 2 0 00-4 0z"/></svg>
+          </div>
+          <div>
+            <label class="upload-btn-label" for="logo-input">Upload logo</label>
+            <input type="file" id="logo-input" accept="image/*">
+            <div style="font-size:11.5px; color:var(--muted); margin-top:3px;">PNG or JPG</div>
+          </div>
+        </div>
+ 
+        <div class="field">
+          <label for="shop-name">Shop name</label>
+          <input type="text" id="shop-name" placeholder="e.g. Sanjiv General Store">
+        </div>
+        <div class="field">
+          <label for="shop-address">Address</label>
+          <textarea id="shop-address" placeholder="Street, city, state"></textarea>
+        </div>
+        <div class="field">
+          <label for="shop-phone">Phone number</label>
+          <input type="tel" id="shop-phone" placeholder="+91 98765 43210">
+        </div>
+        <div class="field">
+          <label for="shop-comment">Comment / tagline</label>
+          <textarea id="shop-comment" placeholder="e.g. Open every day, 9am–9pm"></textarea>
+        </div>
+ 
+        <button class="btn btn-primary" id="save-btn">Save shop info</button>
+        <div class="status-pill" id="save-status"><span class="dot"></span>Saved locally</div>
+ 
+        <div class="divider"></div>
+ 
+        <button class="btn btn-ghost" id="generate-link-btn">Generate shareable link</button>
+        <div class="helper">Creates a public GitHub Gist with your shop info, then builds a link anyone can open on their phone. <b>Your GitHub token is used only in your browser</b> — it's never saved anywhere.</div>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- ============ GITHUB TOKEN MODAL ============ -->
+<div class="overlay" id="token-overlay">
+  <div class="modal">
+    <button class="close-x" id="token-close">✕</button>
+    <h3>Generate link</h3>
+    <p class="sub">Paste a GitHub personal access token with <b style="color:var(--text)">gist</b> scope. It creates a public Gist holding your shop card.</p>
+    <div class="field">
+      <label for="gh-token">GitHub token</label>
+      <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxx">
+    </div>
+    <button class="btn btn-primary" id="token-submit">Create link</button>
+    <div class="error-msg" id="token-error">Could not create the gist. Check the token and try again.</div>
+ 
+    <div id="link-result" style="display:none; margin-top:18px;">
+      <label>Shareable link</label>
+      <div class="link-box">
+        <input type="text" id="result-link" readonly>
+        <button class="copy-btn" id="copy-btn">Copy</button>
+      </div>
+      <div class="helper">Open this link on any phone to show your shop card there.</div>
+    </div>
+  </div>
+</div>
+ 
+<!-- ============ VIEWER ============ -->
+<div class="screen" id="screen-viewer">
+  <div class="viewer-loading" id="viewer-loading">
+    <span class="spinner"></span>
+    <div class="eyebrow">Fetching shop card…</div>
+  </div>
+ 
+  <div class="bulb-frame" id="viewer-card-frame" style="display:none;">
+    <div class="bulbs" id="viewer-bulbs"></div>
+    <div class="card shop-card" id="shop-card">
+      <div class="logo-wrap" id="viewer-logo">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#8892A6" stroke-width="1.5"><path d="M3 9l1-5h16l1 5M3 9v10a1 1 0 001 1h16a1 1 0 001-1V9M3 9h18M8 13a2 2 0 104 0 2 2 0 00-4 0z"/></svg>
+      </div>
+      <h1 class="shop-name" id="viewer-name">Shop name</h1>
+      <div class="shop-line" id="viewer-address"><span class="lbl">Address</span>—</div>
+      <div class="shop-line" id="viewer-phone"><span class="lbl">Phone</span>—</div>
+      <div class="shop-comment" id="viewer-comment"></div>
+      <div class="zoom-hint">✦ Tap the card to zoom in ✦</div>
+    </div>
+  </div>
+ 
+  <div class="viewer-loading" id="viewer-error" style="display:none;">
+    <div class="eyebrow" style="color:var(--danger);">This link could not load a shop card.</div>
+  </div>
+</div>
+ 
+<!-- ============ 3D AD STAGE ============ -->
+<div id="ad-stage">
+  <div class="ad-title">Advertisement</div>
+  <div class="ad-carousel" id="ad-carousel"></div>
+  <button class="ad-close" id="ad-close">Back to shop card</button>
+</div>
  
 <script>
-/* ---------------- shared helpers ---------------- */
-const app = document.getElementById('app');
-let shopData = { name:'', logo:'', address:'', phone:'', comment:'' };
+(function(){
+  "use strict";
  
-function esc(str){
-  const d = document.createElement('div');
-  d.innerText = str || '';
-  return d.innerHTML;
-}
- 
-function defaultLogoSVG(){
-  return `data:image/svg+xml;utf8,` + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-    <rect width="64" height="64" fill="#1C2540"/>
-    <path d="M12 26 L14 14 H50 L52 26" fill="none" stroke="#E8B84B" stroke-width="2.5" stroke-linejoin="round"/>
-    <rect x="14" y="26" width="36" height="24" fill="none" stroke="#E8B84B" stroke-width="2.5"/>
-    <rect x="27" y="36" width="10" height="14" fill="none" stroke="#E8B84B" stroke-width="2"/>
-  </svg>`);
-}
- 
-/* ================= LOGIN VIEW ================= */
-function renderLogin(){
-  app.innerHTML = `
-    <div class="login-wrap">
-      <div class="board login-card">
-        <div class="hooks"><span></span><span></span></div>
-        <div class="eyebrow">Dukaan Card</div>
-        <h1>Welcome back</h1>
-        <p class="sub">Sign in to build your shop's digital signboard.</p>
-        <div class="field" style="text-align:left">
-          <label for="user">Username</label>
-          <input id="user" type="text" autocomplete="username" placeholder="Enter username">
-        </div>
-        <div class="field" style="text-align:left">
-          <label for="pass">Password</label>
-          <input id="pass" type="password" autocomplete="current-password" placeholder="Enter password">
-        </div>
-        <button class="btn" id="loginBtn">Sign in</button>
-        <div class="error-msg" id="loginErr"></div>
-      </div>
-    </div>
-  `;
-  const user = document.getElementById('user');
-  const pass = document.getElementById('pass');
-  const err = document.getElementById('loginErr');
-  const tryLogin = () => {
-    if(user.value.trim() === 'code-x' && pass.value === 'sanjiv'){
-      err.textContent = '';
-      renderDashboard();
-    } else {
-      err.textContent = 'Username or password is incorrect.';
-      gsap.fromTo('.login-card', {x:-6}, {x:6, duration:0.06, repeat:5, yoyo:true, clearProps:'x'});
+  /* ---------------- helpers ---------------- */
+  const $ = (id) => document.getElementById(id);
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+  }
+  function scatterBulbs(container, count){
+    container.innerHTML = '';
+    const w = 380, h = 260; // approx frame footprint, bulbs positioned along border via % perimeter
+    const perimeter = [];
+    // build points along the rounded rectangle border approximately using percentage steps
+    for(let i=0;i<count;i++){
+      const t = i / count;
+      let x, y;
+      if(t < 0.25){ x = t/0.25*100; y = 0; }
+      else if(t < 0.5){ x = 100; y = (t-0.25)/0.25*100; }
+      else if(t < 0.75){ x = 100-(t-0.5)/0.25*100; y = 100; }
+      else { x = 0; y = 100-(t-0.75)/0.25*100; }
+      const b = document.createElement('div');
+      b.className = 'bulb';
+      b.style.left = x+'%';
+      b.style.top = y+'%';
+      b.style.transform = 'translate(-50%,-50%)';
+      container.appendChild(b);
     }
+  }
+  function twinkleBulbs(container){
+    const bulbs = container.querySelectorAll('.bulb');
+    gsap.to(bulbs, {
+      opacity: 1,
+      duration: 0.6,
+      stagger: {each:0.05, repeat:-1, yoyo:true, from:"random"},
+      ease:"sine.inOut"
+    });
+  }
+ 
+  ['login-bulbs','dash-bulbs','viewer-bulbs'].forEach(id=>{
+    const el = $(id);
+    scatterBulbs(el, 28);
+    twinkleBulbs(el);
+  });
+ 
+  /* ---------------- state ---------------- */
+  let shopData = {
+    name:'', logo:'', address:'', phone:'', comment:''
   };
-  document.getElementById('loginBtn').addEventListener('click', tryLogin);
-  [user, pass].forEach(el => el.addEventListener('keydown', e => { if(e.key === 'Enter') tryLogin(); }));
-  gsap.from('.login-card', {opacity:0, y:16, duration:.5, ease:'power2.out'});
-}
  
-/* ================= DASHBOARD VIEW ================= */
-function renderDashboard(){
-  app.innerHTML = `
-    <div>
-      <div class="top-bar">
-        <div class="brand"><span class="dot"></span>Dukaan Card</div>
-        <button class="link-out" id="logoutBtn">Log out</button>
-      </div>
-      <div class="dash">
-        <div class="board panel">
-          <h2>Shop details</h2>
-          <p class="hint">Fill this in once — it powers your shareable signboard.</p>
+  /* ---------------- login ---------------- */
+  $('login-btn').addEventListener('click', doLogin);
+  $('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
  
-          <div class="field">
-            <label for="f-name">Shop name</label>
-            <input id="f-name" type="text" placeholder="e.g. Sanjiv General Store" value="${esc(shopData.name)}">
-          </div>
-          <div class="field">
-            <label for="f-logo">Logo URL <span style="text-transform:none;color:var(--muted)">(or upload below)</span></label>
-            <input id="f-logo" type="text" placeholder="https://..." value="${esc(shopData.logo)}">
-          </div>
-          <div class="field">
-            <label for="f-logo-file">Upload logo image</label>
-            <input id="f-logo-file" type="file" accept="image/*">
-          </div>
-          <div class="field">
-            <label for="f-address">Address</label>
-            <textarea id="f-address" placeholder="Shop no, street, city, pincode">${esc(shopData.address)}</textarea>
-          </div>
-          <div class="field">
-            <label for="f-phone">Phone number</label>
-            <input id="f-phone" type="text" placeholder="+91 98765 43210" value="${esc(shopData.phone)}">
-          </div>
-          <div class="field">
-            <label for="f-comment">Comment / tagline</label>
-            <textarea id="f-comment" placeholder="e.g. Open all 7 days, 9am - 9pm">${esc(shopData.comment)}</textarea>
-          </div>
+  function doLogin(){
+    const u = $('login-user').value.trim();
+    const p = $('login-pass').value;
+    if(u === 'code-x' && p === 'sanjiv'){
+      $('login-error').style.display = 'none';
+      showScreen('screen-dashboard');
+    } else {
+      $('login-error').style.display = 'block';
+      gsap.fromTo('#screen-login .card', {x:-6}, {x:0, duration:0.4, ease:"elastic.out(1,0.3)"});
+    }
+  }
  
-          <button class="btn btn-vermilion" id="genLinkBtn">Generate shareable link</button>
-        </div>
+  $('logout-btn').addEventListener('click', () => {
+    $('login-user').value=''; $('login-pass').value='';
+    showScreen('screen-login');
+  });
  
-        <div class="board preview-stage">
-          <div class="logo-circle" id="prevLogoWrap"><img id="prevLogo" src="${shopData.logo || defaultLogoSVG()}" onerror="this.src='${defaultLogoSVG()}'"></div>
-          <h3 class="preview-name" id="prevName">${esc(shopData.name) || 'Your Shop Name'}</h3>
-          <div class="preview-line" id="prevAddress">${esc(shopData.address) || 'Shop address will appear here'}</div>
-          <div class="preview-line" id="prevPhone">${esc(shopData.phone) || 'Phone number'}</div>
-          <div class="preview-comment" id="prevComment">${esc(shopData.comment) || 'Your tagline or comment shows here.'}</div>
-        </div>
-      </div>
-    </div>
-  `;
-  gsap.from('.panel, .preview-stage', {opacity:0, y:14, duration:.5, stagger:.08, ease:'power2.out'});
- 
-  document.getElementById('logoutBtn').addEventListener('click', () => { renderLogin(); });
- 
-  const nameEl = document.getElementById('f-name');
-  const logoEl = document.getElementById('f-logo');
-  const logoFileEl = document.getElementById('f-logo-file');
-  const addrEl = document.getElementById('f-address');
-  const phoneEl = document.getElementById('f-phone');
-  const commentEl = document.getElementById('f-comment');
- 
-  const sync = () => {
-    shopData.name = nameEl.value;
-    shopData.logo = logoEl.value;
-    shopData.address = addrEl.value;
-    shopData.phone = phoneEl.value;
-    shopData.comment = commentEl.value;
-    document.getElementById('prevName').textContent = shopData.name || 'Your Shop Name';
-    document.getElementById('prevAddress').textContent = shopData.address || 'Shop address will appear here';
-    document.getElementById('prevPhone').textContent = shopData.phone || 'Phone number';
-    document.getElementById('prevComment').textContent = shopData.comment || 'Your tagline or comment shows here.';
-    document.getElementById('prevLogo').src = shopData.logo || defaultLogoSVG();
-  };
-  [nameEl, logoEl, addrEl, phoneEl, commentEl].forEach(el => el.addEventListener('input', sync));
- 
-  logoFileEl.addEventListener('change', (e) => {
+  /* ---------------- dashboard ---------------- */
+  $('logo-input').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if(!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       shopData.logo = reader.result;
-      logoEl.value = '';
-      document.getElementById('prevLogo').src = shopData.logo;
+      $('logo-preview').innerHTML = `<img src="${reader.result}" alt="logo">`;
     };
     reader.readAsDataURL(file);
   });
  
-  document.getElementById('genLinkBtn').addEventListener('click', () => {
-    sync();
-    if(!shopData.name.trim()){
-      gsap.fromTo('#f-name', {x:-6}, {x:6, duration:0.06, repeat:5, yoyo:true, clearProps:'x'});
-      nameEl.focus();
-      return;
-    }
-    openTokenModal();
+  $('save-btn').addEventListener('click', () => {
+    shopData.name = $('shop-name').value.trim();
+    shopData.address = $('shop-address').value.trim();
+    shopData.phone = $('shop-phone').value.trim();
+    shopData.comment = $('shop-comment').value.trim();
+    const pill = $('save-status');
+    pill.classList.add('show');
+    setTimeout(()=>pill.classList.remove('show'), 1800);
   });
-}
  
-/* ---------------- token modal + gist creation ---------------- */
-function openTokenModal(){
-  const wrap = document.createElement('div');
-  wrap.className = 'modal-backdrop';
-  wrap.innerHTML = `
-    <div class="board modal">
-      <button class="close-x" id="modalClose">&times;</button>
-      <h3>Create your shareable link</h3>
-      <p>This uses a GitHub personal access token to save your shop card as a private-by-default Gist and generate a link anyone can open. Create one at
-        <a href="https://github.com/settings/tokens/new?scopes=gist&description=Dukaan%20Card" target="_blank" rel="noopener">github.com/settings/tokens</a>
-        with just the <b>gist</b> scope. Your token is used only in your browser — it is never stored.</p>
-      <div class="field">
-        <label for="tokenInput">GitHub token</label>
-        <input id="tokenInput" type="password" placeholder="ghp_...">
-      </div>
-      <div class="actions">
-        <button class="btn" id="createLinkBtn">Generate link</button>
-      </div>
-      <div class="status-msg" id="tokenStatus"></div>
-      <div id="linkResultHolder"></div>
-    </div>
-  `;
-  document.body.appendChild(wrap);
-  gsap.from(wrap.querySelector('.modal'), {opacity:0, y:12, scale:.97, duration:.35, ease:'power2.out'});
+  /* ---------------- generate link (github gist) ---------------- */
+  $('generate-link-btn').addEventListener('click', () => {
+    // sync latest field values first
+    shopData.name = $('shop-name').value.trim();
+    shopData.address = $('shop-address').value.trim();
+    shopData.phone = $('shop-phone').value.trim();
+    shopData.comment = $('shop-comment').value.trim();
  
-  const close = () => wrap.remove();
-  wrap.addEventListener('click', (e) => { if(e.target === wrap) close(); });
-  document.getElementById('modalClose').addEventListener('click', close);
- 
-  document.getElementById('createLinkBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('createLinkBtn');
-    const status = document.getElementById('tokenStatus');
-    const token = document.getElementById('tokenInput').value.trim();
-    if(!token){
-      status.textContent = 'Enter a GitHub token to continue.';
-      status.className = 'status-msg err';
+    if(!shopData.name){
+      alert('Add at least a shop name before generating a link.');
       return;
     }
+    $('link-result').style.display = 'none';
+    $('token-error').style.display = 'none';
+    $('gh-token').value = '';
+    $('token-overlay').classList.add('active');
+  });
+ 
+  $('token-close').addEventListener('click', () => $('token-overlay').classList.remove('active'));
+ 
+  $('token-submit').addEventListener('click', async () => {
+    const token = $('gh-token').value.trim();
+    if(!token){ return; }
+    const btn = $('token-submit');
+    const original = btn.textContent;
     btn.innerHTML = '<span class="spinner"></span> Creating…';
     btn.disabled = true;
-    status.textContent = '';
-    status.className = 'status-msg';
+    $('token-error').style.display = 'none';
  
     try{
       const res = await fetch('https://api.github.com/gists', {
@@ -383,140 +652,170 @@ function openTokenModal(){
         headers:{
           'Authorization': 'token ' + token,
           'Accept': 'application/vnd.github+json',
-          'Content-Type':'application/json'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          description: 'Dukaan Card — ' + (shopData.name || 'Shop'),
+          description: 'Shop signage card: ' + shopData.name,
           public: true,
-          files:{
-            'shop-data.json': { content: JSON.stringify(shopData) }
+          files: {
+            'shop-card.json': { content: JSON.stringify(shopData) }
           }
         })
       });
+ 
       if(!res.ok){
-        const errBody = await res.json().catch(()=>({}));
-        throw new Error(errBody.message || ('GitHub API error (' + res.status + ')'));
+        throw new Error('Request failed: ' + res.status);
       }
       const data = await res.json();
-      const shareUrl = window.location.origin + window.location.pathname + '#/view/' + data.id;
+      const gistId = data.id;
+      const baseUrl = location.origin + location.pathname;
+      const shareLink = baseUrl + '?gist=' + gistId;
  
-      status.textContent = 'Link created.';
-      status.className = 'status-msg ok';
-      btn.style.display = 'none';
- 
-      const holder = document.getElementById('linkResultHolder');
-      holder.innerHTML = `
-        <div class="link-result">
-          <input type="text" readonly value="${esc(shareUrl)}" id="shareUrlField">
-          <button class="copy-btn" id="copyBtn">Copy</button>
-        </div>
-        <p style="margin-top:12px;">Open this link on another phone to see the animated signboard.</p>
-      `;
-      document.getElementById('copyBtn').addEventListener('click', () => {
-        const field = document.getElementById('shareUrlField');
-        field.select();
-        navigator.clipboard?.writeText(shareUrl).catch(()=>{});
-        document.getElementById('copyBtn').textContent = 'Copied';
-        setTimeout(() => { document.getElementById('copyBtn').textContent = 'Copy'; }, 1600);
-      });
-    } catch(e){
-      status.textContent = e.message || 'Something went wrong. Check your token and try again.';
-      status.className = 'status-msg err';
-      btn.innerHTML = 'Generate link';
+      $('result-link').value = shareLink;
+      $('link-result').style.display = 'block';
+    } catch(err){
+      console.error(err);
+      $('token-error').style.display = 'block';
+    } finally {
+      btn.textContent = original;
       btn.disabled = false;
     }
   });
-}
  
-/* ================= AD (VIEW) PAGE ================= */
-async function renderAdView(gistId){
-  app.innerHTML = `
-    <div class="ad-stage">
-      <div class="ad-glow"></div>
-      <div class="ad-glow b"></div>
-      <div class="ad-loading" id="adStatus">Loading shop card…</div>
-    </div>
-  `;
-  try{
-    const res = await fetch('https://api.github.com/gists/' + gistId);
-    if(!res.ok) throw new Error('Card not found. The link may be incorrect or expired.');
-    const data = await res.json();
-    const file = data.files && data.files['shop-data.json'];
-    if(!file) throw new Error('This card is missing its data file.');
-    const info = JSON.parse(file.content);
-    buildAdCard(info);
-  } catch(e){
-    document.getElementById('adStatus').textContent = e.message || 'Could not load this shop card.';
-    document.getElementById('adStatus').className = 'ad-error';
-  }
-}
- 
-function buildAdCard(info){
-  const stage = document.querySelector('.ad-stage');
-  stage.innerHTML = `
-    <div class="ad-glow"></div>
-    <div class="ad-glow b"></div>
-    <div class="board ad-card" id="adCard">
-      <div class="hooks"><span></span><span></span></div>
-      <div class="logo-circle" id="adLogoWrap">
-        <img id="adLogo" src="${info.logo || defaultLogoSVG()}" onerror="this.src='${defaultLogoSVG()}'">
-      </div>
-      <h1 id="adName">${esc(info.name) || 'Shop Name'}</h1>
-      ${info.address ? `<div class="ad-line" id="adAddress"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 22s7-7.4 7-13a7 7 0 10-14 0c0 5.6 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg><span>${esc(info.address)}</span></div>` : ''}
-      ${info.phone ? `<div class="ad-line" id="adPhone"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 005 5L14 13l5 2v4a2 2 0 01-2 2C9.5 21 3 14.5 3 6a2 2 0 012-2z"/></svg><span>${esc(info.phone)}</span></div>` : ''}
-      ${info.comment ? `<div class="ad-comment" id="adComment">${esc(info.comment)}</div>` : ''}
-      <div class="ad-footer">Digital Signboard</div>
-    </div>
-  `;
- 
-  const card = document.getElementById('adCard');
- 
-  // GSAP snap-zoom 3D entrance
-  const tl = gsap.timeline({defaults:{ease:'back.out(1.7)'}});
-  tl.set(card, {opacity:1})
-    .fromTo(card, {scale:2.6, rotateY:35, rotateX:-18, z:-200},
-                   {scale:1, rotateY:0, rotateX:0, z:0, duration:1, ease:'expo.out'})
-    .fromTo('#adLogoWrap', {scale:0, rotate:-25}, {scale:1, rotate:0, duration:.6}, '-=0.5')
-    .fromTo('#adName', {opacity:0, y:14, scale:1.3}, {opacity:1, y:0, scale:1, duration:.5}, '-=0.35')
-    .fromTo(['#adAddress', '#adPhone'], {opacity:0, x:-16}, {opacity:1, x:0, duration:.4, stagger:.12}, '-=0.25')
-    .fromTo('#adComment', {opacity:0, y:10}, {opacity:1, y:0, duration:.45}, '-=0.1')
-    .fromTo('.ad-footer', {opacity:0}, {opacity:1, duration:.4}, '-=0.15');
- 
-  // ambient float
-  gsap.to(card, {y:-8, duration:2.6, repeat:-1, yoyo:true, ease:'sine.inOut', delay:1});
- 
-  // pointer-driven 3D tilt for a live advertisement feel
-  const stageEl = document.querySelector('.ad-stage');
-  stageEl.addEventListener('mousemove', (e) => {
-    const r = card.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width - 0.5;
-    const py = (e.clientY - r.top) / r.height - 0.5;
-    gsap.to(card, {rotateY: px * 16, rotateX: -py * 16, duration:.6, ease:'power2.out'});
+  $('copy-btn').addEventListener('click', () => {
+    const input = $('result-link');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(()=>{
+      $('copy-btn').textContent = 'Copied';
+      setTimeout(()=> $('copy-btn').textContent = 'Copy', 1500);
+    }).catch(()=>{
+      document.execCommand('copy');
+    });
   });
-  stageEl.addEventListener('mouseleave', () => {
-    gsap.to(card, {rotateY:0, rotateX:0, duration:.8, ease:'power2.out'});
-  });
-  stageEl.addEventListener('touchmove', (e) => {
-    if(!e.touches[0]) return;
-    const r = card.getBoundingClientRect();
-    const px = (e.touches[0].clientX - r.left) / r.width - 0.5;
-    const py = (e.touches[0].clientY - r.top) / r.height - 0.5;
-    gsap.to(card, {rotateY: px * 14, rotateX: -py * 14, duration:.4, ease:'power2.out'});
-  }, {passive:true});
-}
  
-/* ================= ROUTER ================= */
-function route(){
-  const hash = window.location.hash;
-  const match = hash.match(/^#\/view\/(.+)$/);
-  if(match){
-    renderAdView(decodeURIComponent(match[1]));
-  } else {
-    renderLogin();
+  /* ---------------- viewer mode ---------------- */
+  const params = new URLSearchParams(location.search);
+  const gistId = params.get('gist');
+ 
+  if(gistId){
+    showScreen('screen-viewer');
+    loadGist(gistId);
   }
-}
-window.addEventListener('hashchange', route);
-route();
+ 
+  async function loadGist(id){
+    try{
+      const res = await fetch('https://api.github.com/gists/' + id);
+      if(!res.ok) throw new Error('not found');
+      const data = await res.json();
+      const fileKey = Object.keys(data.files)[0];
+      const content = data.files[fileKey].content;
+      const shop = JSON.parse(content);
+      renderViewerCard(shop);
+    } catch(err){
+      console.error(err);
+      $('viewer-loading').style.display = 'none';
+      $('viewer-error').style.display = 'flex';
+    }
+  }
+ 
+  function renderViewerCard(shop){
+    $('viewer-loading').style.display = 'none';
+ 
+    if(shop.logo){
+      $('viewer-logo').innerHTML = `<img src="${shop.logo}" alt="logo">`;
+    }
+    $('viewer-name').textContent = shop.name || 'Shop';
+    $('viewer-address').innerHTML = `<span class="lbl">Address</span>${shop.address || '—'}`;
+    $('viewer-phone').innerHTML = `<span class="lbl">Phone</span>${shop.phone || '—'}`;
+    $('viewer-comment').textContent = shop.comment || '';
+    if(!shop.comment){ $('viewer-comment').style.display = 'none'; }
+ 
+    const frame = $('viewer-card-frame');
+    frame.style.display = 'block';
+ 
+    gsap.fromTo(frame,
+      {opacity:0, scale:0.55, y:30},
+      {opacity:1, scale:1, y:0, duration:1.1, ease:"elastic.out(1,0.55)"}
+    );
+    gsap.fromTo('.zoom-hint', {opacity:0}, {opacity:0.8, delay:0.9, duration:0.6,
+      repeat:-1, yoyo:true, repeatDelay:0.4});
+ 
+    $('shop-card').addEventListener('click', zoomIntoAd);
+  }
+ 
+  /* ---------------- zoom -> 3D advertisement stage ---------------- */
+  const AD_CONTENT = [
+    {eyebrow:"Today", title:"Fresh Arrivals", body:"New stock just landed on the shelves — first look, first pick."},
+    {eyebrow:"This week", title:"Loyalty Rewards", body:"Every 5th visit earns a store credit. Ask at the counter."},
+    {eyebrow:"Weekend", title:"Bundle Offer", body:"Combine any three items and save on the total, weekends only."},
+    {eyebrow:"Always", title:"Home Delivery", body:"Call ahead and we'll have your order ready or delivered nearby."}
+  ];
+ 
+  let adBuilt = false, rotation = 0, autoTween = null;
+ 
+  function buildAdCarousel(){
+    if(adBuilt) return;
+    const carousel = $('ad-carousel');
+    const radius = 260;
+    const n = AD_CONTENT.length;
+    AD_CONTENT.forEach((ad, i) => {
+      const angle = (360/n) * i;
+      const card = document.createElement('div');
+      card.className = 'ad-card';
+      card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+      card.innerHTML = `
+        <div class="eyebrow">${ad.eyebrow}</div>
+        <h3>${ad.title}</h3>
+        <p>${ad.body}</p>
+      `;
+      carousel.appendChild(card);
+    });
+    adBuilt = true;
+  }
+ 
+  function zoomIntoAd(){
+    const card = $('shop-card');
+    gsap.timeline()
+      .to(card, {
+        scale: 5,
+        opacity: 0,
+        duration: 0.9,
+        ease: "power2.in"
+      })
+      .call(() => {
+        buildAdCarousel();
+        $('ad-stage').classList.add('active');
+        gsap.set('#ad-carousel', {rotationY: 0});
+        startAutoRotate();
+        gsap.fromTo('#ad-stage', {opacity:0}, {opacity:1, duration:0.4});
+        gsap.fromTo('.ad-card', {opacity:0}, {opacity:1, stagger:0.08, duration:0.5});
+      })
+      .call(() => {
+        // reset shop card for when user returns
+        gsap.set(card, {scale:1, opacity:1});
+      }, null, "+=0.1");
+  }
+ 
+  function startAutoRotate(){
+    if(autoTween) autoTween.kill();
+    autoTween = gsap.to('#ad-carousel', {
+      rotationY: "+=360",
+      duration: 18,
+      ease: "none",
+      repeat: -1
+    });
+  }
+ 
+  $('ad-close').addEventListener('click', () => {
+    if(autoTween) autoTween.kill();
+    gsap.to('#ad-stage', {
+      opacity:0, duration:0.35, onComplete:()=>{
+        $('ad-stage').classList.remove('active');
+      }
+    });
+  });
+ 
+})();
 </script>
 </body>
 </html>
