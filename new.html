@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SHOPCAST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14110F;
+    --panel:#1E1A16;
+    --panel-raised:#26211C;
+    --amber:#E8A33D;
+    --amber-dim:#8A652A;
+    --teal:#2FA9A0;
+    --text:#F3EDE3;
+    --text-dim:#A79E90;
+    --error:#E0654A;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .sign{
+    font-family:'Bebas Neue', sans-serif;
+    letter-spacing:0.08em;
+    font-size:2.6rem;
+    color:var(--amber);
+    text-shadow:0 0 8px rgba(232,163,61,0.45), 0 0 22px rgba(232,163,61,0.18);
+  }
+  .sign.small{font-size:1.5rem;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- LOGIN ---------- */
+  #loginView.active{
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;
+    background:
+      radial-gradient(circle at 50% 20%, rgba(232,163,61,0.08), transparent 60%),
+      var(--bg);
+  }
+  .login-card{
+    width:100%;max-width:360px;
+    background:var(--panel);
+    border:1px solid #332C24;
+    border-radius:var(--radius);
+    padding:36px 30px;
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.45);
+  }
+  .tagline{color:var(--text-dim);font-size:0.9rem;margin:6px 0 26px;}
+  #loginForm{display:flex;flex-direction:column;gap:14px;text-align:left;}
+  label{font-size:0.8rem;color:var(--text-dim);display:flex;flex-direction:column;gap:6px;}
+  input,textarea{
+    background:var(--panel-raised);
+    border:1px solid #3A322A;
+    color:var(--text);
+    border-radius:6px;
+    padding:10px 12px;
+    font-family:inherit;
+    font-size:0.95rem;
+    outline:none;
+  }
+  input:focus,textarea:focus{border-color:var(--amber);}
+  textarea{resize:vertical;min-height:64px;}
+  button{
+    cursor:pointer;
+    border:none;
+    border-radius:6px;
+    padding:11px 16px;
+    font-family:inherit;
+    font-weight:600;
+    font-size:0.95rem;
+  }
+  #loginForm button, #shopForm button{
+    background:var(--amber);
+    color:#1A1408;
+    margin-top:6px;
+    transition:filter 0.15s ease;
+  }
+  #loginForm button:hover, #shopForm button:hover{filter:brightness(1.08);}
+  .error{color:var(--error);font-size:0.85rem;min-height:1.1em;margin:2px 0 0;}
+  .ghost{
+    background:transparent;color:var(--text-dim);border:1px solid #3A322A;
+  }
+  .ghost:hover{color:var(--text);border-color:var(--amber-dim);}
+
+  /* ---------- DASHBOARD ---------- */
+  .dash-header{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:20px 28px;border-bottom:1px solid #2A241D;
+  }
+  .dash-grid{
+    display:grid;grid-template-columns:1fr;gap:24px;
+    max-width:920px;margin:0 auto;padding:28px 20px 60px;
+  }
+  @media(min-width:800px){
+    .dash-grid{grid-template-columns:1.1fr 0.9fr;align-items:start;}
+  }
+  .ledger, .result-panel{
+    background:var(--panel);border:1px solid #2A241D;border-radius:var(--radius);
+    padding:24px;
+  }
+  .ledger h2, .result-panel h2{
+    font-family:'Bebas Neue',sans-serif;letter-spacing:0.04em;font-size:1.4rem;
+    color:var(--text);margin:0 0 16px;font-weight:400;
+  }
+  #shopForm{display:flex;flex-direction:column;gap:14px;}
+  hr{border:none;border-top:1px solid #2A241D;margin:8px 0;}
+  .hint{font-size:0.78rem;color:var(--text-dim);line-height:1.4;margin:0;}
+  #logoPreviewWrap img{
+    max-width:120px;max-height:120px;border-radius:8px;border:1px solid #3A322A;
+    margin-top:6px;object-fit:cover;
+  }
+  .result-panel{position:sticky;top:20px;}
+  .link-row{display:flex;gap:8px;}
+  .link-row input{flex:1;font-size:0.82rem;}
+  #copyBtn{background:var(--teal);color:#08201E;flex-shrink:0;}
+  .ghost-link{
+    display:inline-block;margin-top:14px;color:var(--amber);text-decoration:none;font-size:0.9rem;
+  }
+  .ghost-link:hover{text-decoration:underline;}
+
+  /* ---------- VIEWER ---------- */
+  #viewerView{position:fixed;inset:0;background:var(--bg);overflow:hidden;}
+  #viewerLoading, #viewerError{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:10px;color:var(--text-dim);text-align:center;padding:20px;
+  }
+  #viewerError{color:var(--error);display:none;}
+  #adScroll{
+    height:100vh;width:100%;overflow-y:scroll;scroll-snap-type:y mandatory;
+    perspective:1400px;
+  }
+  .adsec{
+    height:100vh;width:100%;scroll-snap-align:start;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:40px 24px;position:relative;
+    transform-style:preserve-3d;
+  }
+  .adsec-inner{transform-style:preserve-3d;max-width:640px;}
+  .eyebrow{
+    font-size:0.72rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--teal);
+    margin-bottom:14px;
+  }
+  #secHero{background:radial-gradient(circle at 50% 40%, rgba(232,163,61,0.10), transparent 65%);}
+  #secHero .sign{font-size:clamp(2.6rem,9vw,5.5rem);line-height:1;}
+  #secLogo{background:radial-gradient(circle at 50% 50%, rgba(47,169,160,0.10), transparent 65%);}
+  #secLogo img{
+    width:min(220px,55vw);height:min(220px,55vw);object-fit:cover;border-radius:16px;
+    border:1px solid #3A322A;box-shadow:0 30px 60px rgba(0,0,0,0.5);
+  }
+  #secLogo .no-logo{
+    width:min(220px,55vw);height:min(220px,55vw);border-radius:16px;
+    border:1px dashed #3A322A;display:flex;align-items:center;justify-content:center;
+    color:var(--text-dim);font-size:0.85rem;
+  }
+  .ad-line{font-size:1.25rem;color:var(--text);line-height:1.5;}
+  #secPhone a{
+    font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,7vw,3.4rem);
+    color:var(--amber);text-decoration:none;letter-spacing:0.03em;
+    text-shadow:0 0 10px rgba(232,163,61,0.35);
+  }
+  #secComment .ad-line{
+    font-style:italic;font-size:1.4rem;position:relative;
+  }
+  #secComment .ad-line::before{content:'"';color:var(--teal);}
+  #secComment .ad-line::after{content:'"';color:var(--teal);}
+  .end-mark{position:absolute;bottom:26px;font-size:0.7rem;color:var(--text-dim);letter-spacing:0.2em;}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- LOGIN -->
+  <section id="loginView" class="view active">
+    <div class="login-card">
+      <div class="sign">SHOPCAST</div>
+      <p class="tagline">Digital signage, made shareable.</p>
+      <form id="loginForm" autocomplete="off">
+        <label>Username
+          <input id="username" required autocomplete="off" />
+        </label>
+        <label>Password
+          <input id="password" type="password" required autocomplete="off" />
+        </label>
+        <button type="submit">Enter</button>
+        <p id="loginError" class="error"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboardView" class="view">
+    <header class="dash-header">
+      <div class="sign small">SHOPCAST</div>
+      <button id="logoutBtn" class="ghost">Log out</button>
+    </header>
+    <div class="dash-grid">
+      <form id="shopForm" class="ledger">
+        <h2>Storefront details</h2>
+        <label>Shop name
+          <input id="shopName" required placeholder="e.g. Maple &amp; Co." />
+        </label>
+        <label>Logo
+          <input id="shopLogo" type="file" accept="image/*" />
+        </label>
+        <div id="logoPreviewWrap"><img id="logoPreview" alt="Logo preview" hidden /></div>
+        <label>Address
+          <textarea id="shopAddress" required placeholder="123 Market Street, Coimbatore"></textarea>
+        </label>
+        <label>Phone number
+          <input id="shopPhone" required placeholder="+91 98765 43210" />
+        </label>
+        <label>Comment
+          <textarea id="shopComment" placeholder="A short line about your shop"></textarea>
+        </label>
+        <hr/>
+        <h2>Publish</h2>
+        <label>GitHub token
+          <input id="githubToken" type="password" placeholder="ghp_..." required />
+        </label>
+        <p class="hint">Needs "gist" scope. The token is used only to create one public gist holding these details, then discarded — it is never saved.</p>
+        <button type="submit" id="generateBtn">Generate shareable link</button>
+        <p id="genError" class="error"></p>
+      </form>
+
+      <div class="result-panel" id="resultPanel" hidden>
+        <h2>Your link is live</h2>
+        <div class="link-row">
+          <input id="shareLink" readonly />
+          <button id="copyBtn">Copy</button>
+        </div>
+        <p class="hint" style="margin-top:10px;">Open this link on any phone to show the animated storefront page.</p>
+        <a id="previewLink" target="_blank" class="ghost-link">Preview it here →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEWER -->
+  <section id="viewerView" class="view">
+    <div id="viewerLoading">
+      <div class="sign small">SHOPCAST</div>
+      <p>Loading storefront…</p>
+    </div>
+    <div id="viewerError">
+      <p id="viewerErrorText">Couldn't load this storefront.</p>
+    </div>
+    <div id="adScroll" style="display:none;"></div>
+  </section>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  const CREDS = { user: 'code-x', pass: 'sanjiv' };
+
+  const views = {
+    login: document.getElementById('loginView'),
+    dashboard: document.getElementById('dashboardView'),
+    viewer: document.getElementById('viewerView'),
+  };
+  function show(name){
+    Object.values(views).forEach(v => v.classList.remove('active'));
+    views[name].classList.add('active');
+  }
+
+  const params = new URLSearchParams(location.search);
+  const gistId = params.get('gist');
+
+  if (gistId) {
+    // ---------- VIEWER MODE ----------
+    show('viewer');
+    loadStorefront(gistId);
+  } else {
+    // ---------- LOGIN / DASHBOARD MODE ----------
+    show('login');
+
+    document.getElementById('loginForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      const err = document.getElementById('loginError');
+      if (u === CREDS.user && p === CREDS.pass){
+        err.textContent = '';
+        show('dashboard');
+      } else {
+        err.textContent = 'Incorrect username or password.';
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', function(){
+      document.getElementById('loginForm').reset();
+      document.getElementById('resultPanel').hidden = true;
+      show('login');
+    });
+
+    let logoDataUrl = '';
+    document.getElementById('shopLogo').addEventListener('change', function(e){
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        logoDataUrl = ev.target.result;
+        const img = document.getElementById('logoPreview');
+        img.src = logoDataUrl;
+        img.hidden = false;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('shopForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const genBtn = document.getElementById('generateBtn');
+      const genErr = document.getElementById('genError');
+      genErr.textContent = '';
+
+      const data = {
+        name: document.getElementById('shopName').value.trim(),
+        logo: logoDataUrl,
+        address: document.getElementById('shopAddress').value.trim(),
+        phone: document.getElementById('shopPhone').value.trim(),
+        comment: document.getElementById('shopComment').value.trim(),
+      };
+      const token = document.getElementById('githubToken').value.trim();
+
+      if (!token){
+        genErr.textContent = 'A GitHub token is required to publish.';
+        return;
+      }
+
+      genBtn.disabled = true;
+      genBtn.textContent = 'Publishing…';
+
+      try {
+        const res = await fetch('https://api.github.com/gists', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'token ' + token,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            description: 'SHOPCAST storefront: ' + (data.name || 'untitled'),
+            public: true,
+            files: {
+              'shopcast-data.json': { content: JSON.stringify(data) }
+            }
+          })
+        });
+
+        if (!res.ok){
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.message || ('GitHub responded with ' + res.status));
+        }
+
+        const gist = await res.json();
+        const link = location.origin + location.pathname + '?gist=' + gist.id;
+
+        document.getElementById('shareLink').value = link;
+        document.getElementById('previewLink').href = link;
+        document.getElementById('resultPanel').hidden = false;
+
+      } catch (err){
+        genErr.textContent = 'Publish failed: ' + err.message;
+      } finally {
+        genBtn.disabled = false;
+        genBtn.textContent = 'Generate shareable link';
+      }
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', function(){
+      const input = document.getElementById('shareLink');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(function(){
+        const btn = document.getElementById('copyBtn');
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => btn.textContent = original, 1400);
+      });
+    });
+  }
+
+  // ---------- VIEWER LOGIC ----------
+  async function loadStorefront(id){
+    const loadingEl = document.getElementById('viewerLoading');
+    const errorEl = document.getElementById('viewerError');
+    const errorText = document.getElementById('viewerErrorText');
+    const scrollEl = document.getElementById('adScroll');
+
+    try {
+      const res = await fetch('https://api.github.com/gists/' + id);
+      if (!res.ok) throw new Error('Storefront not found (status ' + res.status + ').');
+      const gist = await res.json();
+      const file = gist.files && gist.files['shopcast-data.json'];
+      if (!file) throw new Error('This gist has no storefront data.');
+      const data = JSON.parse(file.content);
+
+      buildAdPage(data);
+      loadingEl.style.display = 'none';
+      scrollEl.style.display = 'block';
+      initAnimations();
+
+    } catch (err){
+      loadingEl.style.display = 'none';
+      errorEl.style.display = 'flex';
+      errorText.textContent = err.message || 'Something went wrong loading this storefront.';
+    }
+  }
+
+  function esc(str){
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+
+  function buildAdPage(data){
+    const scrollEl = document.getElementById('adScroll');
+
+    const logoBlock = data.logo
+      ? '<img src="' + data.logo + '" alt="' + esc(data.name) + ' logo" />'
+      : '<div class="no-logo">No logo provided</div>';
+
+    scrollEl.innerHTML = `
+      <section class="adsec" id="secHero">
+        <div class="adsec-inner">
+          <div class="eyebrow">Now open</div>
+          <div class="sign">${esc(data.name) || 'Your Shop'}</div>
+        </div>
+        <div class="end-mark">SCROLL ↓</div>
+      </section>
+
+      <section class="adsec" id="secLogo">
+        <div class="adsec-inner">
+          <div class="eyebrow">Storefront</div>
+          ${logoBlock}
+        </div>
+      </section>
+
+      <section class="adsec" id="secAddress">
+        <div class="adsec-inner">
+          <div class="eyebrow">Find us</div>
+          <p class="ad-line">${esc(data.address) || 'Address not provided'}</p>
+        </div>
+      </section>
+
+      <section class="adsec" id="secPhone">
+        <div class="adsec-inner">
+          <div class="eyebrow">Call us</div>
+          <a href="tel:${esc(data.phone)}">${esc(data.phone) || 'Phone not provided'}</a>
+        </div>
+      </section>
+
+      <section class="adsec" id="secComment">
+        <div class="adsec-inner">
+          <div class="eyebrow">From the owners</div>
+          <p class="ad-line">${esc(data.comment) || 'Thanks for stopping by.'}</p>
+        </div>
+      </section>
+    `;
+  }
+
+  function initAnimations(){
+    gsap.registerPlugin(ScrollTrigger);
+
+    const scroller = document.getElementById('adScroll');
+    const sections = gsap.utils.toArray('.adsec');
+
+    sections.forEach(function(sec, i){
+      const inner = sec.querySelector('.adsec-inner');
+      gsap.fromTo(inner,
+        { rotateX: i === 0 ? 0 : -55, opacity: i === 0 ? 1 : 0, scale: 0.8, transformOrigin: '50% 100%' },
+        {
+          rotateX: 0, opacity: 1, scale: 1, ease: 'none',
+          scrollTrigger: {
+            scroller: scroller,
+            trigger: sec,
+            start: 'top 85%',
+            end: 'top 30%',
+            scrub: true
+          }
+        }
+      );
+      gsap.to(inner, {
+        rotateX: 40, opacity: 0, scale: 0.85, transformOrigin: '50% 0%', ease: 'none',
+        scrollTrigger: {
+          scroller: scroller,
+          trigger: sec,
+          start: 'bottom 60%',
+          end: 'bottom 5%',
+          scrub: true
+        }
+      });
+    });
+
+    // Neon flicker on hero sign
+    const heroSign = document.querySelector('#secHero .sign');
+    if (heroSign){
+      const tl = gsap.timeline();
+      tl.to(heroSign, { opacity: 0.2, duration: 0.06 })
+        .to(heroSign, { opacity: 1, duration: 0.08 })
+        .to(heroSign, { opacity: 0.3, duration: 0.05 })
+        .to(heroSign, { opacity: 1, duration: 0.12 })
+        .to(heroSign, {
+          textShadow: '0 0 14px rgba(232,163,61,0.7), 0 0 40px rgba(232,163,61,0.35)',
+          duration: 1.6, repeat: -1, yoyo: true, ease: 'sine.inOut'
+        });
+    }
+  }
+})();
+</script>
+</body>
+</html>
